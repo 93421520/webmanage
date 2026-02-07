@@ -1,6 +1,11 @@
 {
     "require": {
-        "illuminate/view": "^11.47",
-        "jenssegers/blade": "^2.0"
+        "illuminate/view": "^10.0",
+        "jenssegers/blade": "^1.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Core\\": "src/"
+        }
     }
 }

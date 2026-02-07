@@ -1,1 +1,15 @@
+# 忽略 Composer 依赖
 core_system/vendor/
+
+# 忽略系统生成的静态 HTML (发布区)
+public_html/*/
+
+# 忽略客户私有数据中的上传文件和缓存
+sites_data/*/uploads/
+sites_data/*/cache/
+
+# 忽略 IDE 和系统文件
+.DS_Store
+.idea/
+.vscode/
+*.log
