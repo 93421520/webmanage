@@ -24,7 +24,7 @@ class DB {
                 'host' => '127.0.0.1',
                 'user' => 'root',
                 'pass' => '',
-                'name' => 'master_db' 
+                'name' => 'webmaster' 
             ];
 
             self::$masterInstance = new mysqli($config['host'], $config['user'], $config['pass'], $config['name']);
