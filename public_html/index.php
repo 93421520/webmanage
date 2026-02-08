@@ -1,24 +1,61 @@
 <?php
-/**
- * 引导入口
- */
-
-// 1. 引入 Composer 自动加载
 require_once __DIR__ . '/../core_system/vendor/autoload.php';
+session_start();
 
 try {
-    // 2. 启动核心 App (单例模式)
-    // 它会自动识别域名、连接数据库、定义常量 C_ID
     $app = Core\App::instance();
+    $action = $_GET['action'] ?? 'dashboard';
 
-    // 3. 临时简单测试：输出当前客户信息
-    echo "<h1>系统启动成功</h1>";
-    echo "当前域名: " . $_SERVER['HTTP_HOST'] . "<br>";
-    echo "识别客户ID: " . C_ID . "<br>";
-    echo "客户数据目录: " . DATA_PATH . "<br>";
+    // 1. 处理登录提交
+    if ($action === 'do_login') {
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $db = Core\DB::master();
+        $stmt = $db->prepare("SELECT * FROM sys_admins WHERE username = ? AND status = 1 LIMIT 1");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+
+        if ($user && $password === $user['password']) {
+            $_SESSION['admin_id'] = $user['id'];
+            $_SESSION['admin_name'] = $user['real_name'];
+            header("Location: index.php?action=dashboard");
+            exit;
+        } else {
+            echo Core\View::make('admin.login', ['error' => '账号或密码不正确']);
+            exit;
+        }
+    }
+
+    // 2. 退出登录
+    if ($action === 'logout') {
+        session_destroy();
+        header("Location: index.php");
+        exit;
+    }
+
+    // 3. 权限拦截：未登录则只允许看登录页
+    if (!isset($_SESSION['admin_id'])) {
+        echo Core\View::make('admin.login');
+        exit;
+    }
+
+    // 4. 已登录：路由分发
+    switch($action) {
+        case 'dashboard':
+            echo Core\View::make('admin.dashboard', ['name' => $_SESSION['admin_name']]);
+            break;
+        case 'site_info':
+            echo Core\View::make('admin.site_info');
+            break;
+        case 'products':
+            echo Core\View::make('admin.products');
+            break;
+        default:
+            echo "404 - 页面未找到";
+            break;
+    }
 
 } catch (\Exception $e) {
-    // 捕捉初始化阶段的所有错误（如数据库连不上、域名未绑定）
-    header('HTTP/1.1 500 Internal Server Error');
-    echo "System Error: " . $e->getMessage();
+    echo "系统错误: " . $e->getMessage();
 }
