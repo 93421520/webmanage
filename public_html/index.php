@@ -7,25 +7,32 @@ try {
     $action = $_GET['action'] ?? 'dashboard';
 
     // 1. 处理登录提交
-    if ($action === 'do_login') {
-        $username = $_POST['username'] ?? '';
-        $password = $_POST['password'] ?? '';
-        $db = Core\DB::master();
-        $stmt = $db->prepare("SELECT * FROM sys_admins WHERE username = ? AND status = 1 LIMIT 1");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $user = $stmt->get_result()->fetch_assoc();
+    // --- index.php 约第11行开始 ---
+        if ($action === 'do_login') {
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
+            
+            // 修改点：切换到客户数据库逻辑
+            $db = Core\DB::client(); 
+            
+            // 修改点：SQL匹配设计稿中的【管理用户表】
+            // 字段名改为：用户名, 密码, 姓名
+            $stmt = $db->prepare("SELECT id, 密码, 姓名 FROM 管理用户表 WHERE 用户名 = ? LIMIT 1");
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $user = $stmt->get_result()->fetch_assoc();
 
-        if ($user && $password === $user['password']) {
-            $_SESSION['admin_id'] = $user['id'];
-            $_SESSION['admin_name'] = $user['real_name'];
-            header("Location: index.php?action=dashboard");
-            exit;
-        } else {
-            echo Core\View::make('admin.login', ['error' => '账号或密码不正确']);
-            exit;
+            // 修改点：建议使用 password_verify，如果是明文则维持 $password === $user['密码']
+            if ($user && password_verify($password, $user['密码'])) { 
+                $_SESSION['admin_id'] = $user['id'];
+                $_SESSION['admin_name'] = $user['姓名']; // 匹配设计稿字段
+                header("Location: index.php?action=dashboard");
+                exit;
+            } else {
+                echo Core\View::make('admin.login', ['error' => '账号或密码不正确']);
+                exit;
+            }
         }
-    }
 
     // 2. 退出登录
     if ($action === 'logout') {

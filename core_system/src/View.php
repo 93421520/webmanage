@@ -30,24 +30,23 @@ class View {
      * @param array $data 传递给模板的变量
      * @return string
      */
-    public static function make($template, $data = []) {
-        if (self::$blade === null) {
-            /**
-             * 默认逻辑：
-             * 如果是在管理后台，我们需要包含系统核心视图路径和客户私有视图路径
-             */
-            $coreViewPath = dirname(__DIR__) . '/views'; // 核心后台视图
-            $clientViewPath = DATA_PATH . '/templates'; // 客户私有视图
-            
-            // Blade 支持传入路径数组，它会按顺序查找
-            $viewPaths = [$clientViewPath, $coreViewPath];
-            
-            // 缓存路径：每个客户拥有独立的缓存文件夹，防止冲突
-            $cachePath = DATA_PATH . '/cache/views';
-            
-            self::init($viewPaths, $cachePath);
-        }
+    // core_system/src/View.php
 
-        return self::$blade->make($template, $data)->render();
-    }
+        public static function make($template, $data = []) {
+            if (self::$blade === null) {
+                // 核心视图目录：指向 core_system/views
+                $coreViewPath = dirname(__DIR__) . '/views'; 
+                
+                // 客户私有视图目录
+                $clientViewPath = DATA_PATH . '/templates';
+                
+                $viewPaths = [$clientViewPath, $coreViewPath];
+                
+                // 缓存目录 (确保 DATA_PATH 下有这个文件夹，且有写入权限)
+                $cachePath = DATA_PATH . '/cache/views';
+                
+                self::init($viewPaths, $cachePath);
+            }
+            return self::$blade->make($template, $data)->render();
+        }
 }
